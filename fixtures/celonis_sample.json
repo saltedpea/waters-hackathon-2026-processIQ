@@ -1,0 +1,18 @@
+{
+  "content": [
+    {
+      "process_name": "Order to Cash",
+      "COCKPIT_ACTIVE": true,
+      "LIVE_KPI_FEED": 1,
+      "PAM_ACTIVE": true,
+      "CONFORMANCE_RATE": 86,
+      "DEVIATION_COUNT": 12,
+      "ADHERENCE_RATE": 81,
+      "KPI_DEFINED": 1,
+      "OPEN_CI_INITIATIVES": 2,
+      "AUTOMATION_OPPORTUNITIES": 1,
+      "KPI_IMPROVED": 0,
+      "PROCESS_OWNER": "Jane Doe"
+    }
+  ]
+}

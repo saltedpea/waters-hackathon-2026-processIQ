@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProcessIQ Control Tower</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/shell.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/views.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/assistant.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body>
+<div class="shell" id="shell">
+
+  <!-- ============ sidebar ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__brand">
+      <span class="brand-mark"><i data-lucide="radar" class="i"></i></span>
+      <div class="brand-text">
+        <strong>ProcessIQ</strong>
+        <span>Control Tower</span>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav" id="nav"></nav>
+
+    <div class="sidebar__foot">
+      <div class="live-intake">
+        <div class="live-intake__top">
+          <div class="sys-mini__label">Live Intake</div>
+          <label class="switch" title="Classify one new process every 4 seconds">
+            <input type="checkbox" data-live-toggle aria-label="Toggle live intake" />
+            <span class="switch__track"></span>
+          </label>
+        </div>
+        <div class="live-intake__status">
+          <span class="dot" data-live-dot></span>
+          <span class="mono" data-live-status>Idle</span>
+        </div>
+      </div>
+      <div class="sys-mini">
+        <div class="sys-mini__label">System Status</div>
+        <div class="sys-mini__value" id="sys-mini">
+          <span class="dot dot--ok dot--live"></span>
+          <span>All systems operational</span>
+        </div>
+      </div>
+      <div class="user-chip">
+        <span class="avatar">{{ user[:2] | upper }}</span>
+        <div>
+          <div class="user-chip__name">{{ user }}</div>
+          <div class="user-chip__role">Platform operator</div>
+        </div>
+        <a class="user-chip__out" href="{{ url_for('logout') }}" title="Sign out" aria-label="Sign out">
+          <i data-lucide="log-out" class="i"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ main ============ -->
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn" id="toggle-sidebar" type="button" aria-label="Toggle navigation">
+        <i data-lucide="panel-left" class="i"></i>
+      </button>
+
+      <nav class="crumb" aria-label="Breadcrumb">
+        <span>Control Tower</span>
+        <span class="crumb__sep">/</span>
+        <span class="crumb__current" id="crumb">Overview</span>
+      </nav>
+
+      <button class="live-pill" id="live-pill" type="button" hidden
+              title="Live intake is running — open Automation">
+        <span class="dot dot--ok dot--live"></span>
+        <span>LIVE INTAKE</span>
+        <b class="mono" id="live-pill-rows">0</b>
+      </button>
+
+      <div class="search">
+        <i data-lucide="search" class="i"></i>
+        <input class="input" id="search" type="search" autocomplete="off"
+               placeholder="Search process, rule, KPI..." aria-label="Search" />
+        <span class="search__kbd">/</span>
+        <div class="search__results" id="search-results" role="listbox"></div>
+      </div>
+
+      <button class="icon-btn" id="open-notifications" type="button" aria-label="Notifications">
+        <i data-lucide="bell" class="i"></i>
+        <span class="icon-btn__badge" id="notif-badge" hidden>0</span>
+      </button>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch colour theme">
+        <i data-lucide="sun-moon" class="i"></i>
+      </button>
+      <button class="icon-btn" id="open-help" type="button" aria-label="Help">
+        <i data-lucide="circle-help" class="i"></i>
+      </button>
+
+      <span class="env-pill"><span class="dot dot--ok"></span>Production</span>
+      <span class="avatar" title="{{ user }}">{{ user[:2] | upper }}</span>
+    </header>
+
+    <main id="pages">
+      <!-- Pages are rendered by views.js -->
+      <section class="page" id="page-overview"></section>
+      <section class="page" id="page-explorer" hidden></section>
+      <section class="page" id="page-assessment" hidden></section>
+      <section class="page" id="page-governance" hidden></section>
+      <section class="page" id="page-rules" hidden></section>
+      <section class="page" id="page-recommendations" hidden></section>
+      <section class="page" id="page-gates" hidden></section>
+      <section class="page" id="page-analytics" hidden></section>
+      <section class="page" id="page-automation" hidden></section>
+      <section class="page" id="page-celonis" hidden></section>
+      <section class="page" id="page-settings" hidden></section>
+    </main>
+  </div>
+</div>
+
+<!-- ============ assistant ============ -->
+<aside class="assistant" id="assistant" aria-label="ProcessIQ assistant">
+  <header class="assistant__head">
+    <div class="assistant__id">
+      <span class="brand-mark brand-mark--sm"><i data-lucide="sparkles" class="i"></i></span>
+      <div>
+        <strong>ProcessIQ Assistant</strong>
+        <div class="assistant__meta" id="assistant-status">Checking model…</div>
+      </div>
+    </div>
+    <button class="icon-btn" id="assistant-close" type="button" aria-label="Close assistant">
+      <i data-lucide="x" class="i"></i>
+    </button>
+  </header>
+  <div class="assistant__log" id="assistant-log"></div>
+  <form class="assistant__form" id="assistant-form">
+    <input class="input" id="assistant-input" autocomplete="off"
+           placeholder="Ask about a process, gap or next move…" />
+    <button class="btn btn--primary" type="submit" aria-label="Send">
+      <i data-lucide="send-horizontal" class="i"></i>
+    </button>
+  </form>
+</aside>
+
+<button class="assistant-fab" id="assistant-fab" type="button">
+  <i data-lucide="sparkles" class="i"></i>
+  <span>Ask ProcessIQ</span>
+</button>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/views.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+</body>
+</html>

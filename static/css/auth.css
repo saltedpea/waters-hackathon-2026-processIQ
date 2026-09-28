@@ -1,0 +1,109 @@
+/* Login — enterprise access screen */
+
+.auth {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  min-height: 100vh;
+}
+
+/* ---------------- left: brand + visualization ---------------- */
+.auth__brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px clamp(32px, 5vw, 76px);
+  background: var(--bg-2);
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+}
+#auth-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.auth__brand > * { position: relative; z-index: 1; }
+.auth__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(760px 520px at 78% 18%, rgba(46, 168, 255, 0.11), transparent 68%),
+    radial-gradient(620px 460px at 12% 88%, rgba(23, 201, 192, 0.08), transparent 66%);
+  pointer-events: none;
+}
+
+.auth-logo { display: flex; align-items: center; gap: 12px; }
+
+.auth__center { max-width: 560px; }
+.auth__title {
+  font-size: clamp(38px, 4.6vw, 62px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  margin: 0;
+}
+.auth__title span { display: block; color: var(--accent); }
+.auth__rule { width: 52px; height: 2px; background: var(--accent); margin: 24px 0 20px; }
+.auth__tagline { font-size: clamp(15px, 1.4vw, 17px); color: var(--text-2); max-width: 46ch; }
+
+.auth__pillars { display: flex; gap: 30px; flex-wrap: wrap; margin-top: 38px; }
+.auth__pillar { display: flex; align-items: flex-start; gap: 10px; }
+.auth__pillar .i { color: var(--accent-2); margin-top: 2px; }
+.auth__pillar b { display: block; font-size: 12.5px; font-weight: 600; }
+.auth__pillar span { font-size: 11.5px; color: var(--text-3); }
+
+.auth__foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-3); }
+.auth__foot .mono { letter-spacing: 0.04em; }
+
+/* ---------------- right: sign-in card ---------------- */
+.auth__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 44px clamp(24px, 4vw, 64px);
+  background: var(--bg);
+}
+.auth-card { width: 100%; max-width: 392px; }
+.auth-card__mark { display: flex; align-items: center; gap: 11px; margin-bottom: 30px; }
+.auth-card h2 { font-size: 24px; letter-spacing: -0.025em; }
+.auth-card__sub { font-size: 13.5px; color: var(--text-2); margin-top: 5px; }
+
+.auth-form { display: flex; flex-direction: column; gap: 17px; margin-top: 27px; }
+.auth-form .input { padding: 11px 13px; }
+.auth-form__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.check { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); cursor: pointer; }
+.check input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+.link { font-size: 12.5px; color: var(--accent); text-decoration: none; background: none; border: none; padding: 0; }
+.link:hover { text-decoration: underline; }
+
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 13px;
+  border-radius: var(--r-sm);
+  background: var(--crit-soft);
+  border: 1px solid rgba(224, 92, 88, 0.32);
+  color: var(--crit);
+  font-size: 12.5px;
+  margin-top: 20px;
+}
+.auth-error .i { width: 15px; height: 15px; flex-shrink: 0; }
+
+.auth-note {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line-soft);
+  text-align: center;
+}
+.auth-note__label { font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--text-3); }
+.auth-note__secure { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; font-size: 11.5px; color: var(--text-2); }
+.auth-hint { margin-top: 15px; font-size: 11px; color: var(--text-3); line-height: 1.6; }
+.auth-hint code { font-family: var(--mono); color: var(--text-2); }
+
+.auth__theme { position: fixed; top: 20px; right: 22px; z-index: 5; }
+
+@media (max-width: 1000px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth__brand { min-height: 380px; border-right: none; border-bottom: 1px solid var(--line); padding: 32px 26px; gap: 28px; }
+  .auth__pillars { gap: 18px; }
+  .auth__panel { padding: 34px 26px 52px; }
+  .auth-card { max-width: none; }
+}

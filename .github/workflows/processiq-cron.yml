@@ -1,0 +1,51 @@
+name: ProcessIQ scheduled assessment
+
+on:
+  schedule:
+    - cron: "0 6 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Use the sample Celonis fixture and skip email
+        required: false
+        default: "false"
+
+jobs:
+  assess:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Pull, classify, notify
+        env:
+          CELONIS_BASE_URL: ${{ secrets.CELONIS_BASE_URL }}
+          CELONIS_CLIENT_ID: ${{ secrets.CELONIS_CLIENT_ID }}
+          CELONIS_CLIENT_SECRET: ${{ secrets.CELONIS_CLIENT_SECRET }}
+          CELONIS_SCOPE: ${{ secrets.CELONIS_SCOPE }}
+          CELONIS_KM_ID: ${{ secrets.CELONIS_KM_ID }}
+          CELONIS_KPI_IDS: ${{ secrets.CELONIS_KPI_IDS }}
+          CELONIS_PROCESS_NAME: ${{ secrets.CELONIS_PROCESS_NAME }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          SMTP_TO: ${{ secrets.SMTP_TO }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python processiq_bot.py --dry-run
+          else
+            python processiq_bot.py --once
+          fi

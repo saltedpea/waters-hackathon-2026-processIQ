@@ -1,0 +1,13 @@
+{
+  "default_process_name": "Order to Cash",
+  "static_results": {},
+  "criteria": {
+    "C4.1": {"kpi_ids": ["COCKPIT_ACTIVE", "LIVE_KPI_FEED"], "min_value": 0},
+    "C4.2": {"kpi_ids": ["PAM_ACTIVE", "CONFORMANCE_RATE"], "min_value": 0},
+    "C4.3": {"kpi_ids": ["DEVIATION_COUNT", "ADHERENCE_RATE"], "min_value": 0},
+    "C3.5": {"kpi_ids": ["KPI_DEFINED"], "min_value": 0},
+    "C5.1": {"kpi_ids": ["OPEN_CI_INITIATIVES"], "min_value": 0},
+    "C5.2": {"kpi_ids": ["AUTOMATION_OPPORTUNITIES"], "min_value": 0},
+    "C5.3": {"kpi_ids": ["KPI_IMPROVED"], "min_value": 0}
+  }
+}

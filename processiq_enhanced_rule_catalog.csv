@@ -1,0 +1,14 @@
+rule_id,condition,category,action
+DG01,Data completeness < 80%,Data Governance,Improve data completeness
+DG02,Data accuracy < 80%,Data Governance,Improve data accuracy
+DG03,Data consistency < 80%,Data Governance,Standardize inconsistent data
+DG04,Data timeliness < 75%,Data Governance,Improve data timeliness
+DG05,Data lineage < 70%,Data Governance,Establish end-to-end data lineage
+DG06,Data ownership missing,Data Governance,Assign data owner/steward
+DG07,Metadata completeness < 80%,Data Governance,Complete required data metadata
+DG08,Access/compliance < 80%,Data Governance,Review access/compliance
+GATE01,DG Score < 60,Decision Gate,Prioritize DG remediation before advanced AI/automation
+P04,KPI not linked,Measurement,Define and link process KPIs
+P06,Deviation monitoring absent,Process Intelligence,Enable deviation monitoring
+PI01,Exception rate > 25%,Process Intelligence,Investigate process exceptions
+PI03,Manual handling > 65%,Improvement,Evaluate automation opportunity

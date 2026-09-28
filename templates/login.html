@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in · ProcessIQ Control Tower</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body>
+  <button class="icon-btn auth__theme" id="theme-toggle" type="button" aria-label="Switch colour theme">
+    <i data-lucide="sun-moon" class="i"></i>
+  </button>
+
+  <main class="auth">
+    <section class="auth__brand">
+      <canvas id="auth-canvas" aria-hidden="true"></canvas>
+      <div class="auth__veil" aria-hidden="true"></div>
+
+      <div class="auth-logo">
+        <span class="brand-mark"><i data-lucide="radar" class="i"></i></span>
+        <div class="brand-text">
+          <strong>PROCESSIQ</strong>
+          <span>Control Tower</span>
+        </div>
+      </div>
+
+      <div class="auth__center">
+        <h1 class="auth__title">PROCESSIQ<span>CONTROL TOWER</span></h1>
+        <div class="auth__rule"></div>
+        <p class="auth__tagline">Intelligent Process Governance &amp; Maturity Platform</p>
+
+        <div class="auth__pillars">
+          <div class="auth__pillar">
+            <i data-lucide="shield-check" class="i"></i>
+            <div>
+              <b>Data Governance</b>
+              <span>Eight-dimension scoring</span>
+            </div>
+          </div>
+          <div class="auth__pillar">
+            <i data-lucide="layers" class="i"></i>
+            <div>
+              <b>Maturity Assessment</b>
+              <span>Five gated levels</span>
+            </div>
+          </div>
+          <div class="auth__pillar">
+            <i data-lucide="git-branch" class="i"></i>
+            <div>
+              <b>Rule Engine</b>
+              <span>Explainable detections</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth__foot">
+        <span class="mono">PROCESS DATA → GOVERNANCE → MATURITY → GATES → RULES → RECOMMENDATIONS</span>
+      </div>
+    </section>
+
+    <section class="auth__panel">
+      <div class="auth-card">
+        <div class="auth-card__mark">
+          <span class="brand-mark"><i data-lucide="radar" class="i"></i></span>
+          <div class="brand-text">
+            <strong>ProcessIQ</strong>
+            <span>Control Tower</span>
+          </div>
+        </div>
+
+        <h2>Welcome back</h2>
+        <p class="auth-card__sub">Sign in to your Control Tower</p>
+
+        {% if error %}
+        <div class="auth-error" role="alert">
+          <i data-lucide="alert-circle" class="i"></i>
+          <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form class="auth-form" method="post" autocomplete="on">
+          <label class="field">
+            <span>Work Email</span>
+            <input class="input" name="user" type="text" required autofocus
+                   placeholder="name@company.com" autocomplete="username" />
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input class="input" name="password" type="password" required
+                   placeholder="••••••••••" autocomplete="current-password" />
+          </label>
+
+          <div class="auth-form__row">
+            <label class="check">
+              <input type="checkbox" name="remember" value="1" />
+              <span>Remember me</span>
+            </label>
+            <button class="link" type="button" id="forgot">Forgot password?</button>
+          </div>
+
+          <button class="btn btn--primary btn--block" type="submit">
+            <i data-lucide="log-in" class="i"></i>
+            Sign in to Control Tower
+          </button>
+        </form>
+
+        <div class="auth-note">
+          <div class="auth-note__label">Enterprise Process Intelligence Platform</div>
+          <div class="auth-note__secure">
+            <span class="dot dot--ok"></span>
+            Secure Enterprise Access
+          </div>
+          <p class="auth-hint">
+            Default credentials are <code>admin</code> / <code>processiq</code>.
+            Override with <code>PROCESSIQ_USER</code> and <code>PROCESSIQ_PASSWORD</code>.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>
