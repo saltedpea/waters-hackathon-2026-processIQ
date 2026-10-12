@@ -127,6 +127,190 @@ const Views = (() => {
       </div>`).join("") || UI.empty("No rules triggered", "Every tracked rule is currently passing.", "check-circle");
   }
 
+  /* ---- hero banner + floating panel scene ---- */
+  const BAR_COLORS = [
+    ["#c4b5fd", "#5a4bb0"], ["#a78bfa", "#7c5cff"], ["#f0abfc", "#c04fe8"],
+    ["#67e8f9", "#22d3ee"], ["#6ee7b7", "#34d399"],
+  ];
+  const LINE_COLORS = [
+    ["#a78bfa", "#f0abfc"], ["#22d3ee", "#a78bfa"], ["#f43f9e", "#c4b5fd"],
+    ["#67e8f9", "#6ee7b7"], ["#c4b5fd", "#f43f9e"],
+  ];
+  const HERO_LINE_KEYS = () => Object.keys(UI.DIMENSIONS).slice(0, 5);
+
+  function heroScaleBars(counts) {
+    const levels = [1, 2, 3, 4, 5];
+    const max = Math.max(1, ...levels.map((level) => Number((counts || {})[level] || 0)));
+    return levels.map((level) => Math.max(4, (Number((counts || {})[level] || 0) / max) * 100));
+  }
+
+  function heroSceneHtml(overview) {
+    const heights = heroScaleBars(overview.maturity_level_counts);
+    const score = Math.max(0, Math.min(100, Number(overview.avg_governance_score) || 0));
+    const dims = overview.governance_dimension_avg || {};
+    return `<div class="scene" aria-hidden="true">
+      <div class="scene__floor"></div>
+      <div class="scene__stage">
+        <div class="pane pane--bars">
+          <span class="pane__label">Maturity L1 – L5</span>
+          <div class="pane__bars">
+            ${heights.map((height, index) => `<span class="pane__bar" data-hero-bar="${index}"
+              style="--h:${height}%; --c1:${BAR_COLORS[index][0]}; --c2:${BAR_COLORS[index][1]}"></span>`).join("")}
+          </div>
+        </div>
+        <div class="pane pane--ring">
+          <div class="pane__ring" data-hero-ring style="--p:${score}"><b data-hero-score>${score.toFixed(0)}</b></div>
+        </div>
+        <div class="pane pane--code">
+          ${HERO_LINE_KEYS().map((key, index) => `<span class="pane__line" data-hero-line="${key}"
+            style="--w:${Math.max(12, Math.min(100, Number(dims[key]) || 0))}%; --c1:${LINE_COLORS[index][0]}; --c2:${LINE_COLORS[index][1]}"></span>`).join("")}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function heroHtml(overview) {
+    return `<section class="hero">
+      <div class="hero__copy">
+        <span class="hero__eyebrow"><span class="dot dot--live"></span>Live process intelligence</span>
+        <h1 class="hero__title">Process maturity <span>Control Tower</span></h1>
+        <p class="hero__lede">Enterprise process governance and maturity intelligence — every score, gate and gap below comes straight from the scoring engine.</p>
+        <div class="hero__actions">
+          <button class="btn btn--primary" id="refresh-assessment">${UI.icon("rotate-cw")}Refresh Assessment</button>
+          <button class="btn" id="hero-explore" type="button">${UI.icon("table")}Explore processes</button>
+          <span class="hero__stamp">Last refreshed today, ${UI.clockLabel()}</span>
+        </div>
+        <div class="hero__stats">
+          <div class="hero__stat"><b data-hero-stat="total_processes" data-count="${overview.total_processes}" data-decimals="0">0</b><span>Processes</span></div>
+          <div class="hero__stat"><b data-hero-stat="avg_maturity_score" data-count="${overview.avg_maturity_score}" data-decimals="1">0</b><span>Avg maturity</span></div>
+          <div class="hero__stat"><b data-hero-stat="pam_ready_pct" data-count="${overview.pam_ready_pct}" data-decimals="1" data-suffix="%">0</b><span>Measured gate</span></div>
+        </div>
+      </div>
+      ${heroSceneHtml(overview)}
+    </section>`;
+  }
+
+  /* Live intake patches the existing nodes so the floating panels keep drifting
+     instead of snapping back to their start position on every tick. */
+  function patchHero(root, overview) {
+    heroScaleBars(overview.maturity_level_counts).forEach((height, index) => {
+      const bar = root.querySelector(`[data-hero-bar="${index}"]`);
+      if (bar) bar.style.setProperty("--h", `${height}%`);
+    });
+    const score = Math.max(0, Math.min(100, Number(overview.avg_governance_score) || 0));
+    const ring = root.querySelector("[data-hero-ring]");
+    if (ring) ring.style.setProperty("--p", String(score));
+    const scoreText = root.querySelector("[data-hero-score]");
+    if (scoreText) scoreText.textContent = score.toFixed(0);
+    HERO_LINE_KEYS().forEach((key) => {
+      const line = root.querySelector(`[data-hero-line="${key}"]`);
+      const value = Number((overview.governance_dimension_avg || {})[key]) || 0;
+      if (line) line.style.setProperty("--w", `${Math.max(12, Math.min(100, value))}%`);
+    });
+    root.querySelectorAll("[data-hero-stat]").forEach((node) => {
+      const value = Number(overview[node.dataset.heroStat]);
+      if (!Number.isFinite(value)) return;
+      node.dataset.count = value;
+      node.textContent = value.toFixed(Number(node.dataset.decimals || 0)) + (node.dataset.suffix || "");
+    });
+  }
+
+  /* ---- overview charts ---- */
+  function drawOverviewCharts(overview) {
+    const theme = UI.chartTheme();
+    const legend = {
+      position: "bottom",
+      labels: { color: theme.text, boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: "rectRounded", padding: 14, font: { size: 10.5 } },
+    };
+
+    const counts = [1, 2, 3, 4, 5].map((level) => Number((overview.maturity_level_counts || {})[level] || 0));
+    const total = counts.reduce((sum, value) => sum + value, 0);
+    UI.drawChart("ovMaturity", "ov-chart-maturity", {
+      type: "doughnut",
+      data: {
+        labels: [1, 2, 3, 4, 5].map((level) => `L${level} ${UI.levelName(level)}`),
+        datasets: [{ data: counts, backgroundColor: theme.ramp, borderColor: theme.card, borderWidth: 3, hoverOffset: 6 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: "68%",
+        plugins: { legend, tooltip: UI.tooltipOptions(theme) },
+      },
+      plugins: [{
+        id: "centerText",
+        afterDraw(chart) {
+          const area = chart.chartArea;
+          if (!area) return;
+          const x = (area.left + area.right) / 2;
+          const y = (area.top + area.bottom) / 2;
+          const { ctx } = chart;
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = theme.ink;
+          ctx.font = "600 26px 'IBM Plex Mono', monospace";
+          ctx.fillText(String(total), x, y - 7);
+          ctx.fillStyle = theme.text;
+          ctx.font = "500 9.5px 'IBM Plex Mono', monospace";
+          ctx.fillText("PROCESSES", x, y + 15);
+          ctx.restore();
+        },
+      }],
+    });
+
+    const dimKeys = Object.keys(UI.DIMENSIONS);
+    UI.drawChart("ovRadar", "ov-chart-radar", {
+      type: "radar",
+      data: {
+        labels: dimKeys.map((key) => UI.DIMENSIONS[key].replace("Data ", "")),
+        datasets: [
+          {
+            label: "Fleet average",
+            data: dimKeys.map((key) => Number((overview.governance_dimension_avg || {})[key]) || 0),
+            backgroundColor: UI.alpha(theme.accent3, 0.22), borderColor: theme.accent3,
+            pointBackgroundColor: theme.accent3, pointBorderColor: theme.card, borderWidth: 2, pointRadius: 3,
+          },
+          {
+            label: "Threshold",
+            data: dimKeys.map((key) => UI.THRESHOLDS[key]),
+            backgroundColor: "transparent", borderColor: theme.accent2, borderDash: [5, 4],
+            pointRadius: 0, borderWidth: 1.4,
+          },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend, tooltip: UI.tooltipOptions(theme) },
+        scales: {
+          r: {
+            suggestedMin: 0, suggestedMax: 100,
+            angleLines: { color: theme.grid }, grid: { color: theme.grid },
+            pointLabels: { color: theme.text, font: { size: 10 } },
+            ticks: { display: false, stepSize: 25 },
+          },
+        },
+      },
+    });
+
+    const depts = Object.entries(overview.avg_maturity_by_department || {})
+      .sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const deptOptions = UI.gridOptions(theme);
+    UI.drawChart("ovDept", "ov-chart-dept", {
+      type: "bar",
+      data: {
+        labels: depts.map((item) => item[0]),
+        datasets: [{
+          data: depts.map((item) => Number(item[1]) || 0),
+          backgroundColor: UI.gradient(theme.accent3, theme.accent, true),
+          borderRadius: 6, borderSkipped: false, maxBarThickness: 18,
+        }],
+      },
+      options: {
+        ...deptOptions, indexAxis: "y",
+        scales: { ...deptOptions.scales, y: { ...deptOptions.scales.y, grid: { display: false } } },
+      },
+    });
+  }
+
   async function renderOverview(root) {
     root.innerHTML = pageHead(
       "ProcessIQ Control Tower",
@@ -155,12 +339,7 @@ const Views = (() => {
     const weakDims = Object.keys(UI.DIMENSIONS)
       .filter((key) => Number(overview.governance_dimension_avg[key]) < UI.THRESHOLDS[key]).length;
 
-    root.innerHTML = pageHead(
-      "ProcessIQ Control Tower",
-      "Enterprise Process Governance & Maturity Intelligence",
-      `<button class="btn btn--primary" id="refresh-assessment">${UI.icon("rotate-cw")}Refresh Assessment</button>`,
-      `<div class="page-head__stamp"><b>Last refreshed</b><span>Today, ${UI.clockLabel()}</span></div>`
-    ) + `
+    root.innerHTML = heroHtml(overview) + `
       <div class="kpi-grid">
         ${UI.kpi({ key: "total_processes", label: "Processes Assessed", value: overview.total_processes, icon: "boxes",
                    foot: `${Object.keys(overview.avg_maturity_by_department || {}).length} departments` })}
@@ -177,6 +356,21 @@ const Views = (() => {
       </div>
 
       <div class="stack">
+        <div class="viz-grid">
+          <section class="card">
+            <div class="section-head"><div><h2>Maturity Mix</h2><p>Share of processes at each level.</p></div></div>
+            <div class="chart-box chart-box--sm"><canvas id="ov-chart-maturity"></canvas></div>
+          </section>
+          <section class="card">
+            <div class="section-head"><div><h2>Governance Radar</h2><p>Fleet average against threshold.</p></div></div>
+            <div class="chart-box chart-box--sm"><canvas id="ov-chart-radar"></canvas></div>
+          </section>
+          <section class="card">
+            <div class="section-head"><div><h2>Maturity by Department</h2><p>Highest scoring departments first.</p></div></div>
+            <div class="chart-box chart-box--sm"><canvas id="ov-chart-dept"></canvas></div>
+          </section>
+        </div>
+
         <section class="card">
           <div class="section-head">
             <div>
@@ -234,6 +428,9 @@ const Views = (() => {
 
     UI.hydrate(root);
     bindLandscape(root);
+    drawOverviewCharts(overview);
+    const explore = el("hero-explore");
+    if (explore) explore.addEventListener("click", () => App.go("explorer"));
     el("refresh-assessment").addEventListener("click", async (event) => {
       const button = event.currentTarget;
       button.disabled = true;
@@ -269,6 +466,9 @@ const Views = (() => {
 
     ["total_processes", "avg_governance_score", "avg_maturity_score",
      "pam_ready_pct", "ai_ready_pct", "active_issues"].forEach((key) => setKpi(root, key, overview[key]));
+
+    patchHero(root, overview);
+    drawOverviewCharts(overview);
 
     const landscape = el("ov-landscape");
     if (landscape) {
@@ -1014,7 +1214,7 @@ const Views = (() => {
         labels: [1, 2, 3, 4, 5].map((level) => `L${level} · ${UI.levelName(level)}`),
         datasets: [{
           data: [1, 2, 3, 4, 5].map((level) => overview.maturity_level_counts[level] || 0),
-          backgroundColor: theme.ramp, borderRadius: 4, maxBarThickness: 54,
+          backgroundColor: theme.ramp, borderRadius: 8, borderSkipped: false, maxBarThickness: 54,
         }],
       },
       options: UI.gridOptions(theme),
@@ -1025,7 +1225,11 @@ const Views = (() => {
       type: "bar",
       data: {
         labels: depts.map((item) => item[0]),
-        datasets: [{ data: depts.map((item) => item[1]), backgroundColor: theme.accent, borderRadius: 4 }],
+        datasets: [{
+          data: depts.map((item) => item[1]),
+          backgroundColor: UI.gradient(theme.accent3, theme.accent, true),
+          borderRadius: 6, borderSkipped: false,
+        }],
       },
       options: { ...UI.gridOptions(theme), indexAxis: "y" },
     });
@@ -1036,8 +1240,8 @@ const Views = (() => {
         labels: Object.values(UI.DIMENSIONS).map((name) => name.replace("Data ", "")),
         datasets: [{
           data: Object.keys(UI.DIMENSIONS).map((key) => overview.governance_dimension_avg[key]),
-          backgroundColor: "rgba(46,168,255,0.14)", borderColor: theme.accent,
-          pointBackgroundColor: theme.accent, borderWidth: 1.6,
+          backgroundColor: UI.alpha(theme.accent3, 0.22), borderColor: theme.accent3,
+          pointBackgroundColor: theme.accent3, borderWidth: 2,
         }],
       },
       options: {
@@ -1059,7 +1263,11 @@ const Views = (() => {
       type: "bar",
       data: {
         labels: gaps.map((gap) => gap.code),
-        datasets: [{ data: gaps.map((gap) => gap.count), backgroundColor: theme.warn, borderRadius: 4 }],
+        datasets: [{
+          data: gaps.map((gap) => gap.count),
+          backgroundColor: UI.gradient(theme.warn, UI.alpha(theme.accent3, 0.85)),
+          borderRadius: 6, borderSkipped: false,
+        }],
       },
       options: UI.gridOptions(theme),
     });
@@ -1109,22 +1317,28 @@ const Views = (() => {
         <div class="stack">
           <section class="card">
             <div class="section-head"><div><h2>Live Intake</h2>
-              <p>Classify a new process every four seconds.</p></div></div>
+              <p>Classify a new process every ${stream.interval_seconds} seconds.</p></div></div>
             <div class="setting-row">
               <div class="setting-row__text">
                 <div class="setting-row__title">
                   <span class="dot" data-live-dot></span> Continuous classification
                 </div>
                 <div class="setting-row__desc mono" data-live-status>
-                  ${stream.running ? "Live" : "Idle"} · ${stream.rows} rows
+                  ${stream.running ? "Live" : "Idle"} · ${stream.rows} processes
                 </div>
               </div>
-              <label class="switch" title="Classify one new process every 4 seconds">
+              <label class="switch" title="Classify one new process every ${stream.interval_seconds} seconds">
                 <input type="checkbox" data-live-toggle aria-label="Toggle live intake"
                        ${stream.running ? "checked" : ""} />
                 <span class="switch__track"></span>
               </label>
             </div>
+            <div class="metric-row"><span>Generated this run</span>
+              <span class="metric-row__v" data-live-generated>${stream.generated}</span></div>
+            <div class="metric-row"><span>Processes in the working set</span>
+              <span class="metric-row__v" data-live-rows>${stream.rows}</span></div>
+            <div class="metric-row"><span>Newest classified process</span>
+              <span class="metric-row__v mono" data-live-last>—</span></div>
           </section>
           <section class="card">
             <div class="section-head"><div><h2>Delivery</h2>
@@ -1176,6 +1390,38 @@ const Views = (() => {
     ["bell", "Notification", "Email and feed delivery"],
   ];
 
+  function celonisSnapshotCard(snap) {
+    const rows = snap.criteria.map((item) => `
+      <tr>
+        <td class="mono">${UI.esc(item.code)}</td>
+        <td>${UI.esc(item.name)}</td>
+        <td><span class="badge badge--${item.met ? "ok" : "muted"}">${item.met ? "Met" : "Not met"}</span></td>
+        <td>${UI.esc(item.evidence || "—")}</td>
+      </tr>`).join("");
+    const scores = Object.keys(snap.scores).sort().map((level) => `
+      <div class="conn-item">
+        <div class="conn-item__k">Level ${UI.esc(level)} score</div>
+        <div class="conn-item__v mono">${UI.esc(String(snap.scores[level]))}%</div>
+      </div>`).join("");
+    const blocked = (snap.blocked_by || []).length
+      ? `<ul style="margin:0 0 16px 18px">${snap.blocked_by.map((line) => `<li>${UI.esc(line)}</li>`).join("")}</ul>`
+      : `<p style="margin:0 0 16px">Nothing is blocking a higher level.</p>`;
+    return `
+      <section class="card" style="margin-bottom:16px">
+        <div class="section-head">
+          <div><h2>${UI.esc(snap.process_name)}</h2>
+            <p>Scored by the sequential criteria model, which is separate from the Control Tower classifier.</p></div>
+          <span class="badge badge--ok">Level ${snap.level} · ${UI.esc(snap.label)}</span>
+        </div>
+        <div class="conn-grid" style="margin-bottom:16px">${scores}</div>
+        ${blocked}
+        <div class="table-wrap"><table class="table">
+          <thead><tr><th>Code</th><th>Criterion</th><th>Status</th><th>Evidence</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </section>`;
+  }
+
   async function renderCelonis(root) {
     root.innerHTML = pageHead("Celonis Integration", "Connection posture and the data path into ProcessIQ.")
       + `<div class="skeleton skeleton--block"></div>`;
@@ -1189,10 +1435,14 @@ const Views = (() => {
     }
 
     const connected = info.configured;
+    const actions = `
+      <button class="btn" data-celonis-test>${UI.icon("zap")}Test connection</button>
+      <button class="btn btn--primary" data-celonis-pull>${UI.icon("download")}Pull now</button>
+      ${connected ? "" : `<button class="btn" data-celonis-offline>${UI.icon("eye")}Offline preview</button>`}`;
     root.innerHTML = pageHead(
       "Celonis Integration",
       "Connection posture and the data path into ProcessIQ.",
-      "",
+      actions,
       `<span class="badge badge--${connected ? "ok" : "muted"}">
         <span class="dot dot--${connected ? "ok" : ""}"></span>${connected ? "Connected" : "Not configured"}</span>`
     ) + `
@@ -1235,7 +1485,56 @@ const Views = (() => {
             </div>
             ${index < ARCH.length - 1 ? `<div class="arch__link"></div>` : ""}`).join("")}
         </div>
-      </section>`;
+      </section>
+
+      <div id="celonis-results"></div>`;
+
+    const results = root.querySelector("#celonis-results");
+
+    async function busy(button, label, work) {
+      const markup = button.innerHTML;
+      button.disabled = true;
+      button.textContent = label;
+      try {
+        await work();
+      } finally {
+        button.disabled = false;
+        button.innerHTML = markup;
+        UI.refreshIcons(button);
+      }
+    }
+
+    function pull(button, offline) {
+      return busy(button, offline ? "Loading…" : "Pulling…", async () => {
+        results.innerHTML = `<div class="skeleton skeleton--block"></div>`;
+        try {
+          const data = await API.celonisPull(offline);
+          results.innerHTML = `
+            <section class="card" style="margin-bottom:16px">
+              <div class="section-head"><div><h2>Pull result</h2>
+                <p>${UI.esc(data.source)} · ${UI.esc(data.pulled_at)} · ${data.snapshots.length} process(es)</p></div></div>
+            </section>` + data.snapshots.map(celonisSnapshotCard).join("");
+          UI.hydrate(results);
+        } catch (error) {
+          results.innerHTML = UI.errorState(error.message);
+          UI.refreshIcons(results);
+        }
+      });
+    }
+
+    root.querySelector("[data-celonis-test]").addEventListener("click", (event) => {
+      busy(event.currentTarget, "Testing…", async () => {
+        try {
+          UI.toast((await API.celonisTest()).message);
+        } catch (error) {
+          UI.toast(error.message);
+        }
+      });
+    });
+    root.querySelector("[data-celonis-pull]").addEventListener("click", (event) => pull(event.currentTarget, false));
+    const offlineButton = root.querySelector("[data-celonis-offline]");
+    if (offlineButton) offlineButton.addEventListener("click", (event) => pull(event.currentTarget, true));
+
     UI.hydrate(root);
   }
 

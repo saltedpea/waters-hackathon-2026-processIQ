@@ -6,7 +6,7 @@
   <title>ProcessIQ Control Tower</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/shell.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/views.css') }}" />
@@ -41,6 +41,7 @@
           <span class="dot" data-live-dot></span>
           <span class="mono" data-live-status>Idle</span>
         </div>
+        <div class="live-intake__last mono" data-live-last>Nothing classified yet.</div>
       </div>
       <div class="sys-mini">
         <div class="sys-mini__label">System Status</div>
@@ -75,12 +76,21 @@
         <span class="crumb__current" id="crumb">Overview</span>
       </nav>
 
-      <button class="live-pill" id="live-pill" type="button" hidden
-              title="Live intake is running — open Automation">
-        <span class="dot dot--ok dot--live"></span>
-        <span>LIVE INTAKE</span>
-        <b class="mono" id="live-pill-rows">0</b>
-      </button>
+      <div class="live-ctl" id="live-ctl">
+        <button class="live-ctl__btn" id="live-button" type="button" aria-pressed="false"
+                title="Classify one new process every 4 seconds">
+          <span class="dot" data-live-dot></span>
+          <i data-lucide="play" class="i" data-live-icon></i>
+          <span data-live-action>Start live intake</span>
+        </button>
+        <button class="live-ctl__read" id="live-readout" type="button"
+                title="Open Automation">
+          <span class="live-ctl__k">Generated</span>
+          <b class="mono" data-live-generated>0</b>
+          <span class="live-ctl__k">Processes</span>
+          <b class="mono" data-live-rows>0</b>
+        </button>
+      </div>
 
       <div class="search">
         <i data-lucide="search" class="i"></i>

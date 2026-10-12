@@ -15,7 +15,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-2);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--line);
   overflow: hidden;
 }
@@ -59,16 +59,23 @@
   white-space: nowrap;
 }
 .nav-item:hover { background: var(--card); color: var(--text); }
-.nav-item.is-active { background: var(--accent-soft); color: var(--accent); }
+.nav-item.is-active {
+  background: linear-gradient(90deg, var(--accent-soft), transparent);
+  color: var(--text);
+}
+.nav-item.is-active .i { color: var(--accent); filter: drop-shadow(0 0 6px var(--accent)); }
+:root[data-theme="light"] .nav-item.is-active { color: var(--accent); }
+:root[data-theme="light"] .nav-item.is-active .i { filter: none; }
 .nav-item.is-active::before {
   content: "";
   position: absolute;
   left: -10px;
   top: 8px;
   bottom: 8px;
-  width: 2px;
-  border-radius: 0 2px 2px 0;
-  background: var(--accent);
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--grad-brand);
+  box-shadow: var(--glow);
 }
 .nav-item .i { width: 16px; height: 16px; }
 .nav-item__count {
@@ -108,6 +115,13 @@
   overflow-wrap: anywhere;
 }
 .live-intake__status .dot { margin-top: 5px; }
+.live-intake__last {
+  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
 
 .sys-mini { padding: 8px 10px 12px; }
 .sys-mini__label { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; white-space: nowrap; }
@@ -160,11 +174,10 @@
   gap: var(--sp-4);
   padding: 0 var(--sp-5);
   min-height: 65px;
-  background: rgba(7, 17, 31, 0.86);
-  backdrop-filter: blur(14px);
+  background: var(--topbar-bg);
+  backdrop-filter: blur(16px) saturate(1.3);
   border-bottom: 1px solid var(--line);
 }
-:root[data-theme="light"] .topbar { background: rgba(255, 255, 255, 0.88); }
 
 .crumb { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-3); min-width: 0; }
 .crumb__sep { color: var(--line); }
@@ -220,22 +233,53 @@
 .search__item small { color: var(--text-3); font-size: 11px; }
 .search__empty { padding: 16px; text-align: center; color: var(--text-3); font-size: 12.5px; }
 
-.live-pill {
+/* Live intake start/stop lives in the top bar so the control and its counters
+   are reachable from every page, not only from Automation. */
+.live-ctl {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--card);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.live-ctl__btn,
+.live-ctl__read {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 11px;
-  border-radius: 99px;
-  border: 1px solid var(--ok);
-  background: var(--ok-soft);
-  font-size: 10.5px;
+  padding: 6px 13px;
+  border: none;
+  background: none;
+  color: var(--text-2);
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--ok);
-  white-space: nowrap;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
 }
-.live-pill[hidden] { display: none; }
-.live-pill b { font-size: 11px; color: var(--text-2); letter-spacing: 0; }
+.live-ctl__btn { color: var(--text); }
+.live-ctl__btn .i { width: 14px; height: 14px; }
+.live-ctl__btn:hover { background: var(--accent-soft); color: var(--accent); }
+.live-ctl__btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+.live-ctl__read {
+  border-left: 1px solid var(--line);
+  gap: 6px;
+  font-weight: 500;
+}
+.live-ctl__read:hover { background: var(--card-2); }
+.live-ctl__k {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.live-ctl__read b { font-size: 12px; color: var(--text); font-weight: 600; }
+.live-ctl__read b + .live-ctl__k { margin-left: 4px; }
+
+.live-ctl.is-live { border-color: var(--ok); background: var(--ok-soft); }
+.live-ctl.is-live .live-ctl__btn { color: var(--ok); }
+.live-ctl.is-live .live-ctl__btn:hover { background: var(--crit-soft); color: var(--crit); }
+.live-ctl.is-live .live-ctl__read { border-left-color: rgba(47, 182, 124, 0.32); }
 
 .env-pill {
   display: inline-flex;
@@ -264,7 +308,7 @@
   flex-wrap: wrap;
   margin-bottom: var(--sp-5);
 }
-.page-head h1 { font-size: 21px; }
+.page-head h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .page-head p { font-size: 13px; color: var(--text-2); margin-top: 4px; max-width: 74ch; }
 .page-head__actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .page-head__stamp { font-size: 11.5px; color: var(--text-3); text-align: right; line-height: 1.4; }
@@ -284,6 +328,14 @@
   .shell .sidebar__brand { justify-content: center; }
   .shell .user-chip { justify-content: center; }
   .search { width: 200px; }
+}
+
+@media (max-width: 1420px) {
+  .live-ctl__k { display: none; }
+}
+@media (max-width: 1180px) {
+  .live-ctl__btn [data-live-action] { display: none; }
+  .live-ctl__btn { padding: 6px 10px; }
 }
 
 @media (max-width: 720px) {

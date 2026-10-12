@@ -39,8 +39,8 @@ function startNetwork() {
     return {
       node: styles.getPropertyValue("--accent").trim() || "#2ea8ff",
       accent2: styles.getPropertyValue("--accent-2").trim() || "#17c9c0",
-      line: light ? "rgba(11, 116, 212, 0.16)" : "rgba(46, 168, 255, 0.14)",
-      grid: light ? "rgba(120, 145, 175, 0.12)" : "rgba(46, 168, 255, 0.05)",
+      line: light ? "rgba(11, 116, 212, 0.16)" : "rgba(167, 139, 250, 0.2)",
+      grid: light ? "rgba(120, 145, 175, 0.12)" : "rgba(167, 139, 250, 0.06)",
       nodeAlpha: light ? 0.55 : 0.75,
     };
   }

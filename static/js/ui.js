@@ -206,14 +206,54 @@ const UI = (() => {
     return {
       text: read("--text-2", "#93a6bf"),
       grid: read("--grid-line", "rgba(36,54,77,0.55)"),
-      accent: read("--accent", "#2ea8ff"),
-      accent2: read("--accent-2", "#17c9c0"),
-      ok: read("--ok", "#2fb67c"),
-      warn: read("--warn", "#e0a33c"),
-      crit: read("--crit", "#e05c58"),
-      card: read("--card", "#101e31"),
-      ramp: [1, 2, 3, 4, 5].map((step) => read(`--ramp-${step}`, "#2ea8ff")),
+      accent: read("--accent", "#a78bfa"),
+      accent2: read("--accent-2", "#22d3ee"),
+      accent3: read("--accent-3", "#f43f9e"),
+      ok: read("--ok", "#34d399"),
+      warn: read("--warn", "#fbbf24"),
+      crit: read("--crit", "#fb7185"),
+      card: read("--card", "#150e31"),
+      line: read("--line", "#33266a"),
+      ink: read("--text", "#f3eeff"),
+      ramp: [1, 2, 3, 4, 5].map((step) => read(`--ramp-${step}`, "#a78bfa")),
       font: { family: "'IBM Plex Mono', monospace", size: 11 },
+    };
+  }
+
+  /* "#rrggbb" -> rgba(). Chart fills need a translucent version of a token colour. */
+  function alpha(hex, opacity) {
+    const value = String(hex || "").trim().replace("#", "");
+    if (!/^[0-9a-f]{6}$/i.test(value)) return hex;
+    const n = parseInt(value, 16);
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${opacity})`;
+  }
+
+  /* Scriptable fill: fades a bar from `top` to `bottom` along its own axis. */
+  function gradient(top, bottom, horizontal) {
+    return (context) => {
+      const { chart } = context;
+      const area = chart.chartArea;
+      if (!area) return top;
+      const fill = horizontal
+        ? chart.ctx.createLinearGradient(area.left, 0, area.right, 0)
+        : chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+      fill.addColorStop(0, top);
+      fill.addColorStop(1, bottom);
+      return fill;
+    };
+  }
+
+  function tooltipOptions(theme) {
+    return {
+      backgroundColor: alpha(theme.card, 0.96),
+      borderColor: theme.line,
+      borderWidth: 1,
+      titleColor: theme.ink,
+      bodyColor: theme.text,
+      padding: 10,
+      cornerRadius: 8,
+      displayColors: true,
+      boxPadding: 4,
     };
   }
 
@@ -239,7 +279,7 @@ const UI = (() => {
         x: { ticks: { color: theme.text, font: theme.font }, grid: { color: theme.grid, drawBorder: false } },
         y: { beginAtZero: true, ticks: { color: theme.text, font: theme.font }, grid: { color: theme.grid, drawBorder: false } },
       },
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: false }, tooltip: tooltipOptions(theme) },
     };
   }
 
@@ -257,6 +297,6 @@ const UI = (() => {
     esc, icon, refreshIcons, hydrate, setQuiet, levelName, levelTag, targetLevel,
     scoreTone, statusTone, relativeTime, clockLabel,
     skeleton, empty, errorState, meter, kpi, badge, gateBadge,
-    chartTheme, drawChart, destroyChart, gridOptions, toast, countUp,
+    chartTheme, drawChart, destroyChart, gridOptions, alpha, gradient, tooltipOptions, toast, countUp,
   };
 })();

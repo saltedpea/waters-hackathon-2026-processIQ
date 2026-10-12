@@ -15,7 +15,7 @@
   color: var(--text);
   font-size: 13px;
   font-weight: 600;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), var(--glow);
   transition: border-color 150ms var(--ease), transform 150ms var(--ease), background 150ms var(--ease);
 }
 .assistant-fab .i { color: var(--accent); }
@@ -76,12 +76,12 @@
 
 .assistant__bubble--user {
   align-self: flex-end;
-  background: var(--accent);
-  color: #04121f;
+  background: var(--grad-brand);
+  color: #fff;
   font-weight: 500;
   border-bottom-right-radius: 3px;
+  box-shadow: var(--glow);
 }
-:root[data-theme="light"] .assistant__bubble--user { color: #fff; }
 
 .assistant__bubble--agent {
   align-self: flex-start;
