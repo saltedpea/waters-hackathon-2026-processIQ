@@ -1,0 +1,42 @@
+/* Nexora — Agentica theme for the Flask dashboard. Load AFTER polish.css. */
+:root,[data-theme="dark"]{
+  --p-ink:oklch(0.8398 0.0387 309.5391); --p-mute:oklch(0.794 0.0372 307.1);
+  --p-line:oklch(0.3286 0.0154 343.4461); --p-field:oklch(0.2634 0.0219 309.4748 / .55);
+  --p-glass:rgba(0,0,0,.78);
+  --p-sig:#e0393e; --p-sig-rgb:224,57,62; --p-on-sig:#fff;
+}
+[data-theme="dark"] body,[data-theme="dark"] .sidebar{background:#000}
+[data-theme="dark"] .sidebar{border-right-color:var(--p-line)}
+
+/* ---------- assistant panel ---------- */
+.assistant{position:fixed;top:0;right:0;bottom:0;z-index:60;width:min(420px,100vw);display:flex;flex-direction:column;
+  opacity:1;visibility:visible;transform:translateX(105%);transition:transform .38s cubic-bezier(.2,.8,.2,1)}
+.assistant.nx-open{transform:none}
+.assistant-fab{position:fixed;right:24px;bottom:24px;z-index:55;display:flex;align-items:center;gap:8px;padding:12px 18px;cursor:pointer}
+.assistant-fab.nx-hide{opacity:0;pointer-events:none;transform:translateY(10px)}
+.assistant__log{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.assistant__form{display:flex;gap:8px;padding:14px}
+.assistant__form .input{flex:1}
+
+.nx-msg{display:flex;flex-direction:column;gap:8px;max-width:92%;animation:p-in .3s both}
+.nx-msg--user{align-self:flex-end}
+.nx-body{white-space:pre-wrap;line-height:1.55;font-size:14px;padding:10px 14px;border-radius:14px;
+  background:var(--p-field);border:1px solid var(--p-line)}
+.nx-msg--user .nx-body{background:var(--p-sig);border-color:transparent;color:#fff}
+.nx-msg--err .nx-body{border-color:var(--p-sig);color:var(--p-sig)}
+.nx-hint{margin:0;font-size:12px;color:var(--p-mute)}
+.nx-typing::after{content:"●●●";letter-spacing:3px;font-size:9px;color:var(--p-mute);animation:nx-blink 1.2s infinite}
+@keyframes nx-blink{50%{opacity:.25}}
+
+.nx-cite{display:inline-grid;place-items:center;width:18px;height:18px;margin:0 2px;vertical-align:super;
+  font:600 10px "IBM Plex Mono",monospace;color:#fff;background:var(--p-sig);border:0;border-radius:50%;cursor:pointer}
+.nx-cite:hover{filter:brightness(1.15)}
+.nx-sources{display:grid;gap:6px;padding-left:2px}
+.nx-sources__h{font:500 11px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--p-mute)}
+.nx-src{display:flex;gap:10px;padding:8px 10px;border-radius:10px;border:1px solid var(--p-line);font-size:12px;transition:border-color .3s,background .3s}
+.nx-src.nx-flash{border-color:var(--p-sig);background:rgba(var(--p-sig-rgb),.12)}
+.nx-src__n{flex:none;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;
+  font:600 10px "IBM Plex Mono",monospace;color:#fff;background:var(--p-sig)}
+.nx-src__t b{display:block;font-weight:600}
+.nx-src__t p{margin:2px 0 0;color:var(--p-mute);line-height:1.45}
+@media (prefers-reduced-motion:reduce){.assistant{transition:none}}
