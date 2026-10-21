@@ -1,0 +1,100 @@
+/* ProcessIQ shell polish — load LAST (after assistant.css). Pure overrides, no HTML changes. */
+:root{
+  --p-ink:#e6edf7; --p-mute:#8593a8; --p-line:rgba(160,190,230,.13);
+  --p-glass:rgba(10,16,28,.72); --p-field:rgba(255,255,255,.045);
+  --p-sig:#3ee0c1; --p-sig-rgb:62,224,193; --p-ping:#ffb454; --p-ping-rgb:255,180,84;
+  --p-on-sig:#04211c; --p-shadow:0 24px 60px -24px rgba(0,0,0,.6);
+}
+[data-theme="light"]{
+  --p-ink:#0f1a2a; --p-mute:#566679; --p-line:rgba(15,26,42,.13);
+  --p-glass:rgba(255,255,255,.82); --p-field:rgba(15,26,42,.045);
+  --p-sig:#0a9c85; --p-sig-rgb:10,156,133; --p-ping:#c97a00; --p-ping-rgb:201,122,0;
+  --p-on-sig:#fff; --p-shadow:0 24px 60px -28px rgba(15,26,42,.35);
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{border-right:1px solid var(--p-line);
+  background:linear-gradient(180deg,rgba(var(--p-sig-rgb),.05),transparent 38%)}
+.sidebar__brand .brand-mark{color:var(--p-sig);border:1px solid var(--p-sig);background:transparent;
+  box-shadow:inset 0 0 18px rgba(var(--p-sig-rgb),.22)}
+.sidebar__brand strong{letter-spacing:.1em}
+.sidebar__nav a,.sidebar__nav button{position:relative;border-radius:10px;transition:background .18s,color .18s,padding .18s}
+.sidebar__nav a:hover,.sidebar__nav button:hover{background:var(--p-field)}
+.sidebar__nav .active,.sidebar__nav .is-active,.sidebar__nav [aria-current="page"]{
+  background:rgba(var(--p-sig-rgb),.1);color:var(--p-sig)}
+.sidebar__nav .active::before,.sidebar__nav .is-active::before,.sidebar__nav [aria-current="page"]::before{
+  content:"";position:absolute;left:-12px;top:20%;bottom:20%;width:3px;border-radius:0 3px 3px 0;
+  background:var(--p-sig);box-shadow:0 0 12px rgba(var(--p-sig-rgb),.8)}
+
+.live-intake,.sys-mini{border:1px solid var(--p-line);border-radius:14px;background:var(--p-field)}
+.sys-mini__label,.live-intake .sys-mini__label{color:var(--p-mute)}
+.dot--ok{background:var(--p-sig)}
+.dot--live{animation:p-pulse 2.2s infinite}
+@keyframes p-pulse{0%{box-shadow:0 0 0 0 rgba(var(--p-sig-rgb),.55)}100%{box-shadow:0 0 0 9px transparent}}
+.avatar{border-radius:50%;font-weight:600;color:var(--p-sig);background:rgba(var(--p-sig-rgb),.12);
+  box-shadow:0 0 0 1px rgba(var(--p-sig-rgb),.5)}
+.user-chip__out{border-radius:8px;transition:color .2s,background .2s}
+.user-chip__out:hover{color:var(--p-ping);background:var(--p-field)}
+
+/* ---------- topbar ---------- */
+.topbar{position:sticky;top:0;z-index:30;border-bottom:1px solid var(--p-line);
+  background:var(--p-glass);backdrop-filter:blur(14px) saturate(1.3)}
+.icon-btn{border-radius:10px;transition:background .18s,color .18s,transform .18s}
+.icon-btn:hover{background:var(--p-field);color:var(--p-sig)}
+.icon-btn:active{transform:scale(.94)}
+.icon-btn__badge{background:var(--p-ping);color:#2a1800;font-weight:700}
+
+.crumb__current{color:var(--p-ink);font-weight:600}
+.crumb__sep{color:var(--p-mute);opacity:.6}
+
+.search .input{border-radius:12px;background:var(--p-field);border:1px solid var(--p-line);
+  transition:border-color .2s,box-shadow .2s}
+.search:focus-within .input{border-color:var(--p-sig);box-shadow:0 0 0 4px rgba(var(--p-sig-rgb),.16)}
+.search__kbd{font-family:"IBM Plex Mono",monospace;border:1px solid var(--p-line);border-radius:6px}
+.search__results{border:1px solid var(--p-line);border-radius:14px;background:var(--p-glass);
+  backdrop-filter:blur(16px);box-shadow:var(--p-shadow)}
+
+/* live intake control: a transmit switch that glows amber while running */
+.live-ctl__btn{border-radius:10px;border:1px solid var(--p-line);transition:border-color .2s,box-shadow .2s,background .2s}
+.live-ctl__btn:hover{border-color:var(--p-sig)}
+.live-ctl__btn[aria-pressed="true"]{border-color:var(--p-ping);background:rgba(var(--p-ping-rgb),.1);
+  color:var(--p-ping);box-shadow:0 0 0 3px rgba(var(--p-ping-rgb),.14)}
+.live-ctl__btn[aria-pressed="true"] [data-live-dot]{background:var(--p-ping);animation:p-ping 1.4s infinite}
+@keyframes p-ping{0%{box-shadow:0 0 0 0 rgba(var(--p-ping-rgb),.7)}100%{box-shadow:0 0 0 10px transparent}}
+.live-ctl__read{border-radius:10px;transition:background .18s}
+.live-ctl__read:hover{background:var(--p-field)}
+.live-ctl__read b{color:var(--p-sig)}
+
+.env-pill{font-family:"IBM Plex Mono",monospace;font-size:12px;border-radius:999px;
+  border:1px solid rgba(var(--p-sig-rgb),.4);color:var(--p-sig);background:rgba(var(--p-sig-rgb),.08)}
+
+/* ---------- pages ---------- */
+.page:not([hidden]){animation:p-in .35s cubic-bezier(.2,.8,.2,1) both}
+@keyframes p-in{from{opacity:0;transform:translateY(8px)}}
+
+/* ---------- assistant ---------- */
+.assistant{background:var(--p-glass);backdrop-filter:blur(18px);border-left:1px solid var(--p-line);box-shadow:var(--p-shadow)}
+.assistant__head{border-bottom:1px solid var(--p-line)}
+.assistant__head .brand-mark{color:var(--p-sig);border:1px solid var(--p-sig);background:transparent}
+.assistant__meta{color:var(--p-mute);font-family:"IBM Plex Mono",monospace;font-size:12px}
+.assistant__form{border-top:1px solid var(--p-line)}
+.assistant__form .input{border-radius:12px}
+.assistant__form .btn--primary{border-radius:12px;background:var(--p-sig);color:var(--p-on-sig);border:0;
+  transition:transform .2s,box-shadow .2s}
+.assistant__form .btn--primary:hover{transform:translateY(-1px);box-shadow:0 10px 22px -10px rgba(var(--p-sig-rgb),.8)}
+
+.assistant-fab{border-radius:999px;border:0;font-weight:600;background:var(--p-sig);color:var(--p-on-sig);
+  box-shadow:0 14px 34px -12px rgba(var(--p-sig-rgb),.75);transition:transform .2s}
+.assistant-fab:hover{transform:translateY(-3px)}
+.assistant-fab::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 0 0 rgba(var(--p-sig-rgb),.5);animation:p-fab 3.2s 1.5s 3}
+@keyframes p-fab{0%{box-shadow:0 0 0 0 rgba(var(--p-sig-rgb),.5)}70%,100%{box-shadow:0 0 0 18px transparent}}
+
+/* ---------- toast + misc ---------- */
+.toast{border-radius:12px;border:1px solid var(--p-line);border-left:3px solid var(--p-sig);
+  background:var(--p-glass);backdrop-filter:blur(14px);box-shadow:var(--p-shadow)}
+*{scrollbar-width:thin;scrollbar-color:var(--p-line) transparent}
+:focus-visible{outline:2px solid var(--p-sig);outline-offset:2px}
+::selection{background:rgba(var(--p-sig-rgb),.3)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
