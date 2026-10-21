@@ -40,7 +40,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("PROCESSIQ_SECRET", "processiq-control-tower-dev-key")
 ACCOUNT_USER = os.environ.get("PROCESSIQ_USER", "admin")
 ACCOUNT_PASSWORD = os.environ.get("PROCESSIQ_PASSWORD", "processiq")
-PUBLIC_ENDPOINTS = {"login", "static"}
+PUBLIC_ENDPOINTS = {"login", "static", "healthz"}
 
 STATE = {
     "df": None,
@@ -71,6 +71,17 @@ def require_login():
     if request.path.startswith("/api/"):
         return jsonify({"error": "sign in required"}), 401
     return redirect(url_for("login", next=request.path))
+
+
+@app.route("/healthz")
+def healthz():
+    """Unauthenticated liveness probe.
+
+    Container hosts health-check "/", which the auth gate answers with a 302.
+    Some treat that as a failure, so give them a plain 200 to aim at.
+    """
+    ready = STATE["df"] is not None and STATE["model"] is not None
+    return jsonify({"status": "ok" if ready else "starting"}), (200 if ready else 503)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -419,6 +430,102 @@ def api_celonis_status():
     })
 
 
+CELONIS_REQUIRED = {
+    "CELONIS_BASE_URL": "celonis_base_url",
+    "CELONIS_CLIENT_ID": "celonis_client_id",
+    "CELONIS_CLIENT_SECRET": "celonis_client_secret",
+}
+
+
+def celonis_missing(settings):
+    return [name for name, attr in CELONIS_REQUIRED.items() if not getattr(settings, attr)]
+
+
+@app.route("/api/celonis/test", methods=["POST"])
+def api_celonis_test():
+    """Reach Celonis and report the outcome. Never echoes the credentials."""
+    from processiq_celonis import CelonisError, test_connection
+    from processiq_config import load_settings
+
+    settings = load_settings()
+    missing = celonis_missing(settings)
+    if missing:
+        return jsonify({
+            "ok": False,
+            "missing": missing,
+            "message": "Celonis is not configured. Set " + ", ".join(missing) + ".",
+        }), 400
+    try:
+        return jsonify({"ok": True, "message": test_connection(settings)})
+    except CelonisError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 502
+    except Exception as exc:
+        return jsonify({"ok": False, "message": f"Celonis request failed: {exc}"}), 502
+
+
+@app.route("/api/celonis/pull", methods=["POST"])
+def api_celonis_pull():
+    """Pull Knowledge Model KPIs and score them with the sequential criteria model.
+
+    Reported separately from the Control Tower table on purpose: Celonis answers
+    in processiq_core criterion codes, not the 34 engine features the classifier
+    is trained on, and there is no defensible mapping between the two.
+    """
+    from processiq_celonis import CelonisError, extract_snapshots
+    from processiq_config import load_settings
+    from processiq_core import ALL_CODES, CRITERION_INDEX, assess_process
+
+    offline = bool((request.get_json(silent=True) or {}).get("offline"))
+    settings = load_settings()
+    missing = celonis_missing(settings)
+    if missing and not offline:
+        return jsonify({
+            "ok": False,
+            "missing": missing,
+            "message": "Celonis is not configured. Set " + ", ".join(missing) + ".",
+        }), 400
+    if not offline and not settings.celonis_km_id:
+        return jsonify({"ok": False, "message": "CELONIS_KM_ID is required for a live pull."}), 400
+
+    try:
+        snapshots = extract_snapshots(settings, dry_run=offline)
+    except CelonisError as exc:
+        return jsonify({"ok": False, "message": str(exc)}), 502
+    except Exception as exc:
+        return jsonify({"ok": False, "message": f"Celonis pull failed: {exc}"}), 502
+
+    payload = []
+    for snap in snapshots:
+        verdict = assess_process(snap.results)
+        payload.append({
+            "process_name": snap.process_name,
+            "level": verdict["level"],
+            "label": verdict["label"],
+            "scores": {str(level): value for level, value in verdict["scores"].items()},
+            "blocked_by": verdict["blocked_by"],
+            "metrics": [
+                {"kpi_id": item.kpi_id, "name": item.name, "value": item.value}
+                for item in snap.metrics
+            ],
+            "criteria": [
+                {
+                    "code": code,
+                    "name": CRITERION_INDEX[code][1].name,
+                    "met": bool(snap.results.get(code)),
+                    "evidence": snap.evidence.get(code, ""),
+                }
+                for code in ALL_CODES
+            ],
+        })
+    return jsonify({
+        "ok": True,
+        "offline": offline,
+        "source": "Offline fixture" if offline else "Celonis live pull",
+        "pulled_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "snapshots": payload,
+    })
+
+
 @app.route("/api/notifications")
 def api_notifications():
     """Intelligence feed built from run history plus the current assessment."""
@@ -643,26 +750,38 @@ def api_mail():
 
 @app.route("/api/assistant/health")
 def api_assistant_health():
-    from processiq_crew import _cursor_key, ollama_models, ollama_reachable, pick_installed
+    from processiq_crew import (
+        HOSTED_MODEL,
+        _cursor_key,
+        hosted_ready,
+        ollama_models,
+        ollama_reachable,
+        pick_installed,
+    )
 
     base = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")
     preferred = os.environ.get("OLLAMA_MODEL", "llama3.2")
     reachable = ollama_reachable(base)
     models = ollama_models(base) if reachable else []
     chosen = pick_installed(models, preferred)
+    hosted = hosted_ready()
     cursor = bool(_cursor_key())
-    provider = "ollama" if chosen else ("cursor" if cursor else "rules")
+    provider = "ollama" if chosen else ("hosted" if hosted else ("cursor" if cursor else "rules"))
+    if chosen or hosted:
+        hint = None
+    elif reachable:
+        hint = f"Ollama is running but has no model. Run: ollama pull {preferred}"
+    else:
+        hint = "Ollama is not running."
     return jsonify({
         "ollama": reachable,
-        "model_ready": bool(chosen),
+        "model_ready": bool(chosen or hosted),
+        "hosted": hosted,
         "cursor": cursor,
         "provider": provider,
         "models": models,
-        "default": chosen or preferred,
-        "hint": None if chosen else (
-            f"Ollama is running but has no model. Run: ollama pull {preferred}" if reachable
-            else "Ollama is not running."
-        ),
+        "default": chosen or (HOSTED_MODEL if hosted else preferred),
+        "hint": hint,
     })
 
 

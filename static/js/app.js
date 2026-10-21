@@ -74,7 +74,7 @@ const App = (() => {
       button.classList.toggle("is-active", button.dataset.page === page);
     });
     document.getElementById("crumb").textContent = TITLES[page] || page;
-    document.title = `${TITLES[page]} · ProcessIQ Control Tower`;
+    document.title = `${TITLES[page]} · Nexora Control Tower`;
     if (location.hash.slice(1) !== page) history.replaceState(null, "", `#${page}`);
 
     document.getElementById("sidebar").classList.remove("is-open");
@@ -183,11 +183,20 @@ const App = (() => {
     let rendering = false;
 
     function statusLine() {
-      if (!status.running) return `Idle · ${status.rows} rows`;
-      const last = status.last_process_id
-        ? ` · ${status.last_process_id} → L${status.last_classified_level}`
-        : "";
-      return `Live · ${status.rows} rows${last}`;
+      const every = `every ${status.interval_seconds || 4}s`;
+      return status.running
+        ? `Live · ${status.generated} generated · ${status.rows} processes · ${every}`
+        : `Idle · ${status.rows} processes`;
+    }
+
+    /* The newest row the classifier produced, named so the operator can see
+       the stream is doing real work rather than only incrementing a counter. */
+    function lastLine() {
+      if (!status.last_process_id) {
+        return status.running ? "Waiting for the first classification…" : "Nothing classified yet.";
+      }
+      const level = status.last_classified_level;
+      return `${status.last_process_id} · ${status.last_process_name} → Level ${level} ${UI.levelName(level)}`;
     }
 
     function paint() {
@@ -197,13 +206,39 @@ const App = (() => {
       document.querySelectorAll("[data-live-status]").forEach((node) => {
         node.textContent = statusLine();
       });
+      document.querySelectorAll("[data-live-last]").forEach((node) => {
+        node.textContent = lastLine();
+      });
+      document.querySelectorAll("[data-live-generated]").forEach((node) => {
+        node.textContent = status.generated;
+      });
+      document.querySelectorAll("[data-live-rows]").forEach((node) => {
+        node.textContent = status.rows;
+      });
       document.querySelectorAll("[data-live-dot]").forEach((node) => {
         node.className = status.running ? "dot dot--ok dot--live" : "dot";
       });
-      const pill = document.getElementById("live-pill");
-      if (pill) {
-        pill.hidden = !status.running;
-        document.getElementById("live-pill-rows").textContent = status.rows;
+
+      const control = document.getElementById("live-ctl");
+      if (!control) return;
+      control.classList.toggle("is-live", status.running);
+      const button = document.getElementById("live-button");
+      button.setAttribute("aria-pressed", String(status.running));
+      button.title = status.running
+        ? "Stop live intake"
+        : `Classify one new process every ${status.interval_seconds || 4} seconds`;
+      control.querySelector("[data-live-action]").textContent =
+        status.running ? "Stop live intake" : "Start live intake";
+      const glyph = control.querySelector("[data-live-icon]");
+      const wanted = status.running ? "square" : "play";
+      if (glyph && glyph.dataset.glyph !== wanted) {
+        const next = document.createElement("i");
+        next.className = "i";
+        next.setAttribute("data-lucide", wanted);
+        next.setAttribute("data-live-icon", "");
+        next.setAttribute("data-glyph", wanted);
+        glyph.replaceWith(next);
+        UI.refreshIcons(control);
       }
     }
 
@@ -262,19 +297,21 @@ const App = (() => {
     }
 
     async function toggle(on) {
-      const inputs = Array.from(document.querySelectorAll("[data-live-toggle]"));
-      inputs.forEach((input) => { input.disabled = true; });
+      const controls = Array.from(
+        document.querySelectorAll("[data-live-toggle], #live-button")
+      );
+      controls.forEach((control) => { control.disabled = true; });
       try {
         status = on ? await API.streamStart() : await API.streamStop();
         UI.toast(on
-          ? "Live intake started — one classified process every 4 seconds."
-          : "Live intake stopped.");
+          ? `Live intake started — one classified process every ${status.interval_seconds || 4} seconds.`
+          : `Live intake stopped after ${status.generated} generated process${status.generated === 1 ? "" : "es"}.`);
         shownRows = -1;
       } catch (error) {
         UI.toast(error.message);
         await poll();
       } finally {
-        inputs.forEach((input) => { input.disabled = false; });
+        controls.forEach((control) => { control.disabled = false; });
         paint();
       }
     }
@@ -284,8 +321,10 @@ const App = (() => {
         const input = event.target.closest("[data-live-toggle]");
         if (input) toggle(input.checked);
       });
-      const pill = document.getElementById("live-pill");
-      if (pill) pill.addEventListener("click", () => go("automation"));
+      const button = document.getElementById("live-button");
+      if (button) button.addEventListener("click", () => toggle(!status.running));
+      const readout = document.getElementById("live-readout");
+      if (readout) readout.addEventListener("click", () => go("automation"));
       document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
 
       poll();
@@ -305,7 +344,7 @@ const App = (() => {
       const degraded = status.components.filter((item) => item.state === "degraded" || item.state === "not_configured");
       const mini = document.getElementById("sys-mini");
       if (degraded.length) {
-        mini.innerHTML = `<span class="dot dot--warn"></span><span>${degraded.length} component${degraded.length === 1 ? "" : "s"} need attention</span>`;
+        mini.innerHTML = `<span class="dot dot--warn"></span><span>${degraded.length} component${degraded.length === 1 ? " needs" : "s need"} attention</span>`;
       } else {
         mini.innerHTML = `<span class="dot dot--ok dot--live"></span><span>All systems operational</span>`;
       }

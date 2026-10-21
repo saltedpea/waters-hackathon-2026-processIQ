@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const forgot = document.getElementById("forgot");
   if (forgot) {
     forgot.addEventListener("click", () => {
-      forgot.textContent = "Contact your ProcessIQ administrator";
+      forgot.textContent = "Contact your Nexora administrator";
       forgot.disabled = true;
       forgot.style.color = "var(--text-3)";
     });

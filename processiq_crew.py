@@ -1,8 +1,9 @@
 """Multi-agent assistant for the ProcessIQ Control Tower.
 
 Facts always come from the dataset through the tool functions below. The model
-(Ollama first, Cursor API second) only narrates those facts. If no model is
-reachable the router still answers from the same facts.
+(Ollama first, then a hosted OpenAI-compatible endpoint, then the Cursor API)
+only narrates those facts. If no model is reachable the router still answers
+from the same facts.
 """
 
 from __future__ import annotations
@@ -20,6 +21,9 @@ OLLAMA_BASE = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 CURSOR_API_BASE = os.environ.get("CURSOR_API_BASE", "https://api.cursor.com/v1")
 CURSOR_MODEL = os.environ.get("CURSOR_MODEL", "composer-2.5")
+# Hosted OpenAI-compatible narrator, used where Ollama cannot run (e.g. Spaces).
+HOSTED_BASE = os.environ.get("LLM_BASE_URL", "https://router.huggingface.co/v1")
+HOSTED_MODEL = os.environ.get("LLM_MODEL", "openai/gpt-oss-20b")
 STATE_REF = None
 
 GAP_WORDS = ("gap", "blocker", "blocking", "stuck", "issue", "problem", "wrong", "fail", "why", "weak")
@@ -183,6 +187,17 @@ def _cursor_key() -> str:
     return ""
 
 
+def _hosted_key() -> str:
+    for name in ("LLM_API_KEY", "HF_TOKEN", "HUGGINGFACE_API_KEY"):
+        if os.environ.get(name):
+            return os.environ[name]
+    return ""
+
+
+def hosted_ready() -> bool:
+    return bool(_hosted_key())
+
+
 def pick_agent(message: str) -> str:
     return detect_intent(message)
 
@@ -227,6 +242,18 @@ def _resolve_process(message: str, history: Optional[List[Dict[str, str]]]):
 def _has(text: str, words) -> bool:
     cleaned = normalize(text)
     return any(word in cleaned for word in words)
+
+
+def _gate_facts(gates: Dict[str, Any]) -> Dict[str, str]:
+    """Relabel the raw gate keys for the narrator.
+
+    The model is handed these facts verbatim and will echo whatever key names it
+    sees, so the gates reach it under the names the Control Tower displays.
+    """
+    return {
+        "measured_gate": "passes" if gates.get("pam_ready") else "fails",
+        "optimized_gate": "passes" if gates.get("ai_ready") else "fails",
+    }
 
 
 def _fleet_plan() -> Dict[str, Any]:
@@ -276,7 +303,7 @@ def _gaps_plan(detail: Dict[str, Any]) -> Dict[str, Any]:
             "process_id": detail.get("process_id"),
             "process_name": detail.get("process_name"),
             "maturity": maturity,
-            "gates": gates,
+            "gates": _gate_facts(gates),
             "gaps": gaps,
             "triggered_rules": rules,
         },
@@ -319,7 +346,7 @@ def _detail_plan(detail: Dict[str, Any]) -> Dict[str, Any]:
             "department": detail.get("department"),
             "maturity": maturity,
             "governance": {"score": governance.get("score"), "status": governance.get("status")},
-            "gates": gates,
+            "gates": _gate_facts(gates),
             "indicators": indicators,
         },
         "text": text,
@@ -435,6 +462,14 @@ def _narrate(plan: Dict[str, Any], question: str, model: str, base_url: str):
             warning = f"ollama failed ({exc})"
     elif ollama_reachable(base_url):
         warning = "Ollama is running but has no model installed (run: ollama pull llama3.2)"
+
+    hosted = _hosted_key()
+    if hosted:
+        try:
+            reply = _chat(HOSTED_BASE, HOSTED_MODEL, messages, {"Authorization": f"Bearer {hosted}"})
+            return reply, f"hosted:{HOSTED_MODEL}", warning
+        except Exception as exc:
+            warning = f"{warning + '; ' if warning else ''}hosted failed ({exc})"
 
     key = _cursor_key()
     if key:

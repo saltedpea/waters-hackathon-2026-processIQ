@@ -1,4 +1,4 @@
-/* Thin client over the existing ProcessIQ endpoints. No business logic here. */
+/* Thin client over the existing Nexora endpoints. No business logic here. */
 
 const API = (() => {
   async function request(url, options) {
@@ -8,7 +8,7 @@ const API = (() => {
       throw new Error("sign in required");
     }
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+    if (!response.ok) throw new Error(data.error || data.message || `Request failed (${response.status})`);
     return data;
   }
 
@@ -26,6 +26,8 @@ const API = (() => {
     rules: () => request("/api/rules"),
     systemStatus: () => request("/api/system/status"),
     celonis: () => request("/api/celonis/status"),
+    celonisTest: () => json("/api/celonis/test", {}),
+    celonisPull: (offline) => json("/api/celonis/pull", { offline: !!offline }),
     notifications: () => request("/api/notifications"),
     streamStatus: () => request("/api/stream/status"),
     streamStart: () => request("/api/stream/start", { method: "POST" }),

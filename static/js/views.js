@@ -1,4 +1,4 @@
-/* Page renderers. Every number comes from the existing ProcessIQ endpoints. */
+/* Page renderers. Every number comes from the existing Nexora endpoints. */
 
 const Views = (() => {
   const state = {
@@ -313,7 +313,7 @@ const Views = (() => {
 
   async function renderOverview(root) {
     root.innerHTML = pageHead(
-      "ProcessIQ Control Tower",
+      "Nexora Control Tower",
       "Enterprise Process Governance & Maturity Intelligence",
       `<button class="btn btn--primary" id="refresh-assessment">${UI.icon("rotate-cw")}Refresh Assessment</button>`,
       `<div class="page-head__stamp"><b>Last refreshed</b><span id="refresh-stamp">Today, ${UI.clockLabel()}</span></div>`
@@ -419,7 +419,7 @@ const Views = (() => {
           <div class="section-head">
             <div>
               <h2>Intelligence Pipeline</h2>
-              <p>How ProcessIQ turns raw process data into a recommended next move.</p>
+              <p>How Nexora turns raw process data into a recommended next move.</p>
             </div>
           </div>
           ${pipelineHtml()}
@@ -1383,7 +1383,7 @@ const Views = (() => {
     ["database", "Celonis", "Execution data source"],
     ["key-round", "OAuth 2.0", "Client-credentials grant"],
     ["download", "Process Data", "Knowledge Model KPIs"],
-    ["radar", "ProcessIQ", "Ingestion and normalisation"],
+    ["radar", "Nexora", "Ingestion and normalisation"],
     ["layers", "Maturity Engine", "Five gated levels"],
     ["git-branch", "Rule Engine", "Threshold detections"],
     ["lightbulb", "Recommendations", "Prioritised actions"],
@@ -1423,7 +1423,7 @@ const Views = (() => {
   }
 
   async function renderCelonis(root) {
-    root.innerHTML = pageHead("Celonis Integration", "Connection posture and the data path into ProcessIQ.")
+    root.innerHTML = pageHead("Celonis Integration", "Connection posture and the data path into Nexora.")
       + `<div class="skeleton skeleton--block"></div>`;
     let info;
     try {
@@ -1441,7 +1441,7 @@ const Views = (() => {
       ${connected ? "" : `<button class="btn" data-celonis-offline>${UI.icon("eye")}Offline preview</button>`}`;
     root.innerHTML = pageHead(
       "Celonis Integration",
-      "Connection posture and the data path into ProcessIQ.",
+      "Connection posture and the data path into Nexora.",
       actions,
       `<span class="badge badge--${connected ? "ok" : "muted"}">
         <span class="dot dot--${connected ? "ok" : ""}"></span>${connected ? "Connected" : "Not configured"}</span>`
