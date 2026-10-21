@@ -1,0 +1,29 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+
+# Local secrets must never reach the image.
+.processiq.env
+*.env
+
+# Demo media and scratch files. Scoped to the repo root so that static assets
+# added under static/ later are not silently dropped from the image.
+ProcessIQ/
+/*.mp4
+/*.png
+/*.jpg
+/_shot.py
+/_t.txt
+
+# Streamlit control panel is not part of the deployed container.
+processiq_app.py
+
+# Runtime artefacts; regenerated on boot.
+model/
+data/processiq_saved.csv

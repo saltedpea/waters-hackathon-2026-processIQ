@@ -1,0 +1,10 @@
+# Runtime dependencies for the Flask Control Tower only.
+# requirements.txt stays as-is because it also covers the Streamlit control panel,
+# which is not part of the deployed container.
+flask>=3.0,<4
+pandas>=2.0,<3
+numpy>=1.26,<3
+scikit-learn>=1.4,<2
+joblib>=1.3,<2
+requests>=2.31,<3
+gunicorn>=22.0,<24
