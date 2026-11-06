@@ -41,6 +41,16 @@ app.secret_key = os.environ.get("PROCESSIQ_SECRET", "processiq-control-tower-dev
 ACCOUNT_USER = os.environ.get("PROCESSIQ_USER", "admin")
 ACCOUNT_PASSWORD = os.environ.get("PROCESSIQ_PASSWORD", "processiq")
 PUBLIC_ENDPOINTS = {"login", "static", "healthz"}
+# Without a max-age, browsers cache static files heuristically for days, so restyles
+# never show up. "no-cache" still allows 304s, but always revalidates first.
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+
+
+@app.after_request
+def revalidate_static(response):
+    if request.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
 
 STATE = {
     "df": None,

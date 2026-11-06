@@ -1547,7 +1547,7 @@ const Views = (() => {
           <div class="setting-row">
             <div class="setting-row__text">
               <div class="setting-row__title">Colour theme</div>
-              <div class="setting-row__desc">Dark is the default control-room theme. Light is tuned for printing and projectors.</div>
+              <div class="setting-row__desc">Light is the default theme. Dark suits low-light control rooms. The choice is shared with the rest of Nexora.</div>
             </div>
             <div class="setting-row__control">
               <button class="btn" data-theme-toggle>${UI.icon("sun-moon")}<span data-theme-label>Dark</span></button>

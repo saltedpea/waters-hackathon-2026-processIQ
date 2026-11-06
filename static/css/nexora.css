@@ -1,12 +1,28 @@
-/* Nexora — Agentica theme for the Flask dashboard. Load AFTER polish.css. */
-:root,[data-theme="dark"]{
-  --p-ink:oklch(0.8398 0.0387 309.5391); --p-mute:oklch(0.794 0.0372 307.1);
-  --p-line:oklch(0.3286 0.0154 343.4461); --p-field:oklch(0.2634 0.0219 309.4748 / .55);
-  --p-glass:rgba(0,0,0,.78);
-  --p-sig:#e0393e; --p-sig-rgb:224,57,62; --p-on-sig:#fff;
+/* Nexora — indigo/navy theme for the Flask dashboard. Load AFTER polish.css. */
+:root,[data-theme="light"]{
+  --p-ink:#0a0a0a; --p-mute:#454545; --p-line:#e3e3e3; --p-field:#f5f6fa;
+  --p-glass:rgba(255,255,255,.9);
+  --p-sig:#19398d; --p-sig-rgb:25,57,141; --p-on-sig:#fff;
+  --p-shadow:0 24px 60px -28px rgba(26,33,55,.3);
 }
-[data-theme="dark"] body,[data-theme="dark"] .sidebar{background:#000}
-[data-theme="dark"] .sidebar{border-right-color:var(--p-line)}
+[data-theme="dark"]{
+  --p-ink:#fafafa; --p-mute:#a1a1a1; --p-line:#282828; --p-field:rgba(255,255,255,.05);
+  --p-glass:rgba(10,10,10,.85);
+  --p-sig:#6a8dd8; --p-sig-rgb:106,141,216; --p-on-sig:#0a0a0a;
+  --p-shadow:0 24px 60px -24px rgba(0,0,0,.7);
+}
+
+/* Sidebar stays navy in both themes, so give it its own light-on-dark tokens. */
+.sidebar{
+  background:var(--sidebar-bg);border-right:0;color-scheme:dark;color:#f4f5fc;
+  --text:#f4f5fc; --text-2:rgba(244,245,252,.74); --text-3:rgba(244,245,252,.5);
+  --line:rgba(255,255,255,.14); --line-soft:rgba(255,255,255,.09);
+  --card:rgba(255,255,255,.07); --card-2:rgba(255,255,255,.11);
+  --accent:#9db8ff; --accent-soft:rgba(157,184,255,.16); --accent-line:rgba(157,184,255,.4);
+  --p-ink:#f4f5fc; --p-mute:rgba(244,245,252,.6); --p-line:rgba(255,255,255,.12); --p-field:rgba(255,255,255,.07);
+  --p-sig:#9db8ff; --p-sig-rgb:157,184,255;
+}
+:root[data-theme="light"] .nav-item.is-active{color:var(--accent)}
 
 /* ---------- assistant panel ---------- */
 .assistant{position:fixed;top:0;right:0;bottom:0;z-index:60;width:min(420px,100vw);display:flex;flex-direction:column;
@@ -22,21 +38,21 @@
 .nx-msg--user{align-self:flex-end}
 .nx-body{white-space:pre-wrap;line-height:1.55;font-size:14px;padding:10px 14px;border-radius:14px;
   background:var(--p-field);border:1px solid var(--p-line)}
-.nx-msg--user .nx-body{background:var(--p-sig);border-color:transparent;color:#fff}
+.nx-msg--user .nx-body{background:var(--p-sig);border-color:transparent;color:var(--p-on-sig)}
 .nx-msg--err .nx-body{border-color:var(--p-sig);color:var(--p-sig)}
 .nx-hint{margin:0;font-size:12px;color:var(--p-mute)}
 .nx-typing::after{content:"●●●";letter-spacing:3px;font-size:9px;color:var(--p-mute);animation:nx-blink 1.2s infinite}
 @keyframes nx-blink{50%{opacity:.25}}
 
 .nx-cite{display:inline-grid;place-items:center;width:18px;height:18px;margin:0 2px;vertical-align:super;
-  font:600 10px "IBM Plex Mono",monospace;color:#fff;background:var(--p-sig);border:0;border-radius:50%;cursor:pointer}
+  font:600 10px "IBM Plex Mono",monospace;color:var(--p-on-sig);background:var(--p-sig);border:0;border-radius:50%;cursor:pointer}
 .nx-cite:hover{filter:brightness(1.15)}
 .nx-sources{display:grid;gap:6px;padding-left:2px}
 .nx-sources__h{font:500 11px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--p-mute)}
 .nx-src{display:flex;gap:10px;padding:8px 10px;border-radius:10px;border:1px solid var(--p-line);font-size:12px;transition:border-color .3s,background .3s}
 .nx-src.nx-flash{border-color:var(--p-sig);background:rgba(var(--p-sig-rgb),.12)}
 .nx-src__n{flex:none;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;
-  font:600 10px "IBM Plex Mono",monospace;color:#fff;background:var(--p-sig)}
+  font:600 10px "IBM Plex Mono",monospace;color:var(--p-on-sig);background:var(--p-sig)}
 .nx-src__t b{display:block;font-weight:600}
 .nx-src__t p{margin:2px 0 0;color:var(--p-mute);line-height:1.45}
 @media (prefers-reduced-motion:reduce){.assistant{transition:none}}
